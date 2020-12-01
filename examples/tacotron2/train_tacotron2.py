@@ -26,6 +26,7 @@ sys.path.append(".")
 import argparse
 import logging
 import os
+import json
 
 import numpy as np
 import yaml
@@ -314,6 +315,11 @@ def main():
         nargs="?",
         help="pretrained weights .h5 file to load weights from. Auto-skips non-matching layers",
     )
+    parser.add_argument(
+        "--dataset_mapping",
+        default="dump/libritts_mapper.npy",
+        type=str,
+    )
     args = parser.parse_args()
 
     # return strategy
@@ -376,6 +382,13 @@ def main():
         mel_load_fn = np.load
     else:
         raise ValueError("Only npy are supported.")
+
+    with open(args.dataset_mapping) as f:
+        dataset_mapping = json.load(f)
+        speakers_map = dataset_mapping["speakers_map"]
+    n_speakers = config["tacotron2_params"]["n_speakers"]
+    assert n_speakers == len(speakers_map), f"Number of speakers in dataset does not match n_speakers in config. (%s!=%s)" % (n_speakers, len(speakers_map))
+
 
     train_dataset = CharactorMelDataset(
         dataset=config["tacotron2_params"]["dataset"],
