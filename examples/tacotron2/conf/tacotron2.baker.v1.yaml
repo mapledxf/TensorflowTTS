@@ -20,7 +20,7 @@ tacotron2_params:
     embedding_hidden_size: 512
     initializer_range: 0.5
     embedding_dropout_prob: 0.1
-    n_speakers: 1
+    n_speakers: 175
     n_conv_encoder: 5
     encoder_conv_filters: 512
     encoder_conv_kernel_sizes: 5
@@ -47,7 +47,7 @@ tacotron2_params:
 ###########################################################
 #                  DATA LOADER SETTING                    #
 ###########################################################
-batch_size: 32             # Batch size for each GPU with assuming that gradient_accumulation_steps == 1.
+batch_size: 160            # Batch size for each GPU with assuming that gradient_accumulation_steps == 1.
 remove_short_samples: true # Whether to remove samples the length of which are less than batch_max_steps.
 allow_cache: true          # Whether to allow cache in dataset. If true, it requires cpu memory.
 mel_length_threshold: 32   # remove all targets has mel_length <= 32 

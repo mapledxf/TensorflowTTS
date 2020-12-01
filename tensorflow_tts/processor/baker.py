@@ -568,9 +568,22 @@ class BakerProcessor(BaseProcessor):
                         continue
                     phonemes = self.get_phoneme_from_char_and_pinyin(chn_char, pinyin)
                     wav_path = os.path.join(self.data_dir, "Wave", "%s.wav" % utt_id)
-                    items.append(
-                        [" ".join(phonemes), wav_path, utt_id, self.speaker_name]
-                    )
+                    item = [" ".join(phonemes), wav_path, utt_id, self.speaker_name]
+                    items.append(item)
+            with open('/data/xfding/share/TTS/aishell3/train/label_train-set.txt', encoding='utf-8') as ttf:
+                lines = ttf.readlines()
+                for line in lines:
+                    if not line.startswith("SSB"):
+                        continue
+                    utt_id, pinyin, text = line.strip().split('|')
+                    speaker_id = utt_id[:7]
+                    wav_path = os.path.join('/data/xfding/share/TTS/aishell3/train','wav', speaker_id, "%s.wav" % utt_id)
+                    pinyin = pinyin.strip().replace("%","").replace("$","").split()
+                    chn_char = text.strip().replace("%", "#1").replace("$","")
+                    phonemes = self.get_phoneme_from_char_and_pinyin(chn_char, pinyin)
+                    item = [" ".join(phonemes), wav_path, utt_id[3:], speaker_id]
+                    items.append(item)
+
             self.items = items
 
     def get_phoneme_from_char_and_pinyin(self, chn_char, pinyin):
@@ -586,6 +599,7 @@ class BakerProcessor(BaseProcessor):
                     assert chn_char[i + 1] == "儿"
                     assert pinyin[j][-2] == "r"
                     tone = pinyin[j][-1]
+                    assert tone.isnumeric()
                     a = pinyin[j][:-2]
                     a1, a2 = self.pinyin_dict[a]
                     result += [a1, a2 + tone, "er5"]
@@ -596,6 +610,7 @@ class BakerProcessor(BaseProcessor):
                     j += 1
                 else:
                     tone = pinyin[j][-1]
+                    assert tone.isnumeric()
                     a = pinyin[j][:-1]
                     a1, a2 = self.pinyin_dict[a]
                     result += [a1, a2 + tone]
@@ -618,15 +633,22 @@ class BakerProcessor(BaseProcessor):
         assert j == len(pinyin)
         return result
 
+    def normalization(self, data):
+        max_val = np.max(abs(data))
+        return data / max_val
+
     def get_one_sample(self, item):
         text, wav_file, utt_id, speaker_name = item
 
         # normalize audio signal to be [-1, 1], soundfile already norm.
-        audio, rate = sf.read(wav_file)
+        audio, rate = librosa.load(wav_file, sr=self.target_rate)
+        if np.abs(audio).max() > 1.0:
+            audio = self.normalization(audio)
+        #audio, rate = sf.read(wav_file)
         audio = audio.astype(np.float32)
-        if rate != self.target_rate:
-            assert rate > self.target_rate
-            audio = librosa.resample(audio, rate, self.target_rate)
+        #if rate != self.target_rate:
+        #    assert rate > self.target_rate
+        #    audio = librosa.resample(audio, rate, self.target_rate)
 
         # convert text to ids
         try:
