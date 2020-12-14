@@ -195,7 +195,7 @@ def main():
                     d[-1] -= rest // 2
                     d[0] -= rest - rest // 2
 
-                assert d[-1] > 0 and d[0] > 0, f"{d}, {np.sum(d)}, {real_mel_length}"
+                assert d[-1] >= 0 and d[0] >= 0, f"{d}, {np.sum(d)}, {real_mel_length}"
 
             saved_name = utt_ids[i].decode("utf-8")
 
