@@ -135,12 +135,11 @@ def main():
         reduction_factor=config["tacotron2_params"]["reduction_factor"],
         use_fixed_shapes=True,
     )
-    dataset = dataset.create(allow_cache=True, batch_size=args.batch_size)
+    dataset = dataset.create(allow_cache=True, batch_size=args.batch_size, drop_remainder=False)
 
     # define model and load checkpoint
     tacotron2 = TFTacotron2(
         config=Tacotron2Config(**config["tacotron2_params"]),
-        training=True,  # enable teacher forcing mode.
         name="tacotron2",
     )
     tacotron2._build()  # build model to be able load_weights.
